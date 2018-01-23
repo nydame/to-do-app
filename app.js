@@ -1,12 +1,17 @@
 function onReady() {
+    // access the list element so UI can be rendered from local storage
+    let toDoList = document.getElementById('toDoList');
     // keep track of to-do items
-    let toDos = [];
+    let toDos = getToDos();
     // assign ID numbers to to-do items
-    let id = 0;
+    let id = toDos.length;
+    // show to-do list if it has been saved
+    if (toDos.length) {
+        renderTheUI();
+    }
     // select DOM elements to use
     const addToDoForm = document.getElementById('addToDoForm');
     const newToDoText = document.getElementById('newToDoText');
-    const toDoList = document.getElementById('toDoList');
     // create latest to-do
     function createNewToDo() {
         // make sure entry isn't an empty string
@@ -23,8 +28,10 @@ function onReady() {
         newToDoText.value = '';
         // increment the ID
         id++;
-        // finally, update the list to reflect latest data & show
+        // update the list to reflect latest data & show
         renderTheUI();
+        // update local storage
+        saveToDos();
     }
     // reset, rebuild & show the list according to latest data
     function renderTheUI() {
@@ -37,13 +44,18 @@ function onReady() {
             // create a new checkbox
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
+            // provide a listener for the checkbox
+            checkbox.addEventListener('click', function() {
+                // event.preventDefault();
+                toDo.complete = !toDo.complete;
+            });
             // create a span to wrap text of to-do
             const titleWrap = document.createElement('span');
             titleWrap.textContent = toDo.title;
             // create a delete button
             const deleteButton = document.createElement('button');
             deleteButton.textContent = 'Delete';
-            // provide a listener for the delete deleteButton
+            // provide a listener for the delete button
             deleteButton.addEventListener('click', function(event) {
                 event.preventDefault();
                 deleteToDo(toDo.id);
@@ -56,13 +68,29 @@ function onReady() {
             toDoList.appendChild(newLi);
         });
     }
-    // listen for click of delete buttons
+    // delete targeted to-do
     function deleteToDo(id) {
-        console.log('Delete ' + id);
-        debugger;
         toDos = toDos.filter(toDo => toDo.id !== id);
-        debugger;
         renderTheUI();
+        // update local storage
+        updateLocalTodos();
+    }
+    // store toDos in local storage if possible
+    function saveToDos() {
+        if (window.localStorage) {
+            localStorage.setItem('toDos', JSON.stringify(toDos));
+        }
+    }
+    // retrieve toDos from local storage if possible
+    function getToDos() {
+        if (window.localStorage) {
+            let storedToDos = null;
+            if ((storedToDos = localStorage.getItem('toDos'))) {
+                return JSON.parse(storedToDos);
+            } else {
+                return [];
+            }
+        }
     }
     // listen for new to-do
     addToDoForm.addEventListener('submit', event => {
